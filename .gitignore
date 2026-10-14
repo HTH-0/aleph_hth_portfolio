@@ -1,0 +1,8 @@
+# 작업용 참고 자료 (제출하지 않음)
+참고자료/
+작업메모.md
+
+node_modules/
+.vercel/
+.env
+.env.*

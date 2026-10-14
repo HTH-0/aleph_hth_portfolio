@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="배우고, 검증하고, 개선하는 과정을 기록한 개인 포트폴리오" />
+  <title>Learning Portfolio</title>
+  <link rel="stylesheet" href="industry.css" />
+  <style>
+    html { scroll-behavior: smooth; }
+    body { margin: 0; background: var(--color-bg); color: var(--color-text); }
+    a { color: var(--color-text); text-decoration: none; }
+    a:hover { color: var(--color-accent-700); }
+    ::selection { background: color-mix(in srgb, var(--color-accent) 30%, transparent); }
+    .evidence-link:hover { color: var(--color-accent-300); border-bottom-color: var(--color-accent-300); }
+    section[id] { scroll-margin-top: 92px; }
+    .rail-dot {
+      display: flex; align-items: center; justify-content: center;
+      width: 30px; height: 30px; border-radius: 50%;
+      border: 1px solid var(--color-divider);
+      font-family: var(--font-heading); font-weight: 600; font-size: 12px;
+      color: var(--color-neutral-500);
+      transition: color .2s, border-color .2s, background .2s;
+    }
+    .rail-dot:hover { color: var(--color-accent-700); border-color: var(--color-accent); }
+    .rail-dot.active { color: var(--color-bg); background: var(--color-accent); border-color: var(--color-accent); }
+    .rail-dot-secret { border-radius: 6px; border-style: dashed; color: var(--color-neutral-400); }
+    .rail-dot-secret.active { border-style: solid; }
+    @media (max-width: 860px) { #section-rail { display: none; } }
+
+    #register-form { display: flex; flex-direction: column; gap: 10px; }
+    #register-form[hidden] { display: none; }
+    #private .field > label { font-size: 11px; letter-spacing: 0.04em; }
+    #private .input {
+      background: transparent; border: none; border-bottom: 1px solid var(--color-divider);
+      border-radius: 0; padding: 8px 2px;
+    }
+    #private .input:hover { border-bottom-color: color-mix(in srgb, var(--color-text) 45%, transparent); }
+    #private .input:focus-visible { border-bottom-color: var(--color-accent); outline: none; }
+    #private .btn-secondary {
+      border: none; background: none; padding: 6px 0;
+      color: var(--color-accent-700); text-decoration: underline; text-underline-offset: 3px;
+    }
+    #private .btn-secondary:hover { background: none; color: var(--color-accent); }
+    #auth-message.auth-message-error { color: #ef8b7f; }
+    #private .private-item { padding: 16px 0; border-top: 1px solid var(--color-divider); }
+    #private .private-item:first-child { border-top: none; padding-top: 0; }
+    #private .private-item h4 { margin: 0 0 6px; font-size: 15px; }
+    #private .private-item p { margin: 0; font-size: 13px; line-height: 1.7; color: var(--color-neutral-700); }
+    #private .passkey-row {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      padding: 10px 0; border-top: 1px solid var(--color-divider); font-size: 13px;
+    }
+    #private .passkey-row:first-child { border-top: none; }
+  </style>
+  <script src="https://unpkg.com/@simplewebauthn/browser@14.0.0/dist/bundle/index.umd.min.js" defer></script>
+  <script src="assets/private.js" defer></script>
+  <script src="assets/section-nav.js" defer></script>
+</head>
+<body>
+<div style="font-family: var(--font-body); background: var(--color-bg); color: var(--color-text); overflow-x: hidden">
+
+  <div style="position: fixed; top: 0; left: 0; right: 0; z-index: 50; display: flex; align-items: baseline; gap: 32px; padding: 22px 32px; background: color-mix(in srgb, var(--color-bg) 86%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--color-divider)">
+    <a href="#cover" style="display: flex; align-items: center; gap: 8px; font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.06em; margin-right: auto">
+      <span style="width: 8px; height: 8px; background: var(--color-accent)"></span>
+      하태형
+    </a>
+    <a href="#index" style="font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase">Index</a>
+    <a href="#about" style="font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase">About</a>
+    <a href="#works" style="font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase">Work</a>
+    <a href="#contact" style="font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase">Contact</a>
+    <a href="#private" style="font-size: 13px; letter-spacing: 0.1em; text-transform: uppercase">Secret</a>
+  </div>
+
+  <nav id="section-rail" aria-label="섹션 이동" style="position: fixed; right: 24px; top: 50%; transform: translateY(-50%); z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 14px 10px; border-radius: 999px; background: color-mix(in srgb, var(--color-bg) 86%, transparent); backdrop-filter: blur(10px); border: 1px solid var(--color-divider)">
+    <a href="#about" data-rail-target="about" class="rail-dot">01</a>
+    <div style="width: 1px; height: 9px; background: var(--color-divider)"></div>
+    <a href="#story" data-rail-target="story" class="rail-dot">02</a>
+    <div style="width: 1px; height: 9px; background: var(--color-divider)"></div>
+    <a href="#method" data-rail-target="method" class="rail-dot">03</a>
+    <div style="width: 1px; height: 9px; background: var(--color-divider)"></div>
+    <a href="#experience" data-rail-target="experience" class="rail-dot">04</a>
+    <div style="width: 1px; height: 9px; background: var(--color-divider)"></div>
+    <a href="#strengths" data-rail-target="strengths" class="rail-dot">05</a>
+    <div style="width: 1px; height: 9px; background: var(--color-divider)"></div>
+    <a href="#works" data-rail-target="works" class="rail-dot">06</a>
+    <div style="width: 1px; height: 9px; background: var(--color-divider)"></div>
+    <a href="#evidence" data-rail-target="evidence" class="rail-dot">07</a>
+    <div style="width: 1px; height: 9px; background: var(--color-divider)"></div>
+    <a href="#contact" data-rail-target="contact" class="rail-dot">08</a>
+    <div style="width: 16px; height: 1px; background: var(--color-divider); margin: 4px 0"></div>
+    <a href="#private" data-rail-target="private" class="rail-dot rail-dot-secret" aria-label="Secret 영역으로 이동">S</a>
+  </nav>
+
+  <section id="cover" data-screen-label="Cover" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: space-between; padding: 110px 28px 40px">
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 0; padding: 48px 0">
+      <div style="width: 100%; font-family: var(--font-heading); font-weight: 600; font-size: clamp(72px, 21vw, 340px); line-height: 0.82; letter-spacing: -0.03em; text-align: center; color: var(--color-text)">portfolio</div>
+      <div style="width: 100%; max-width: 720px; margin-top: 40px; display: grid; grid-template-columns: 1fr; gap: 14px; text-align: center">
+        <p style="margin: 0; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">배우고, 검증하고, 더 나아갑니다. 새로운 것을 배울 때 모르는 부분을 그냥 넘기지 않고, 필요한 도움을 찾아 이해를 보완합니다. 배운 내용을 스스로 검증하고, 문제를 해결한 과정은 기록하며 다음 학습으로 연결하려고 합니다.</p>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 16px">
+      <div style="text-align: center; font-family: var(--font-heading); font-weight: 600; font-size: clamp(14px, 2.5vw, 26px); line-height: 1; letter-spacing: 0.02em">하태형</div>
+      <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; padding-top: 20px; border-top: 1px solid var(--color-divider)">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600)">Scroll ↓</div>
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); text-align: right">Backend · Infra<br />Learner</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="index" data-screen-label="Index" style="padding: 110px 28px; border-top: 1px solid var(--color-divider)">
+    <div style="max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px">
+      <h2 style="margin: 0; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em">Index</h2>
+
+      <div style="display: flex; flex-direction: column; gap: 0">
+        <a href="#about" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">01</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">About</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>자기소개서 / 강점 셋 / 지금 하고 있는 것</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#story" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">02</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">돌아온 길</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>과정 이전의 고비</div>
+              <div>다시 시작한 날</div>
+              <div>그 뒤에 달라진 것</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#method" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">03</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">배우는 방식</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>LEARN — 적극적으로 질문하고 보완합니다</div>
+              <div>VERIFY — 제대로 이해했는지 확인합니다</div>
+              <div>IMPROVE — 문제의 원인을 기록합니다</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#experience" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">04</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">경험</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>모르는 부분을 그냥 넘기지 않는 학습</div>
+              <div>이해한 내용을 다른 관점에서 검증하기</div>
+              <div>오류를 해결하는 것에서 원인을 기록하는 것으로</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#strengths" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">05</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">강점</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>AI를 도구로 삼아 부족한 부분 보완</div>
+              <div>모르는 것을 끝까지 파고드는 지적 호기심</div>
+              <div>체계적 시간관리 · 자기주도적 실행</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#works" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">06</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">작업물</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>T01–T09 / 강점별로 연결된 결과물</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#evidence" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">07</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">기록 · 자격증</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>보유 · 준비 중인 자격증 / 과정 · 학력 / 하루 기록</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#contact" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-accent)">08</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase">Contact</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700)">
+              <div>GitHub</div>
+            </div>
+          </div>
+        </a>
+
+        <a href="#private" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 26px 0; border-top: 1px solid var(--color-divider); border-bottom: 1px solid var(--color-divider)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 38px; line-height: 0.9; color: var(--color-neutral-400)">—</div>
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px; letter-spacing: 0.02em; text-transform: uppercase; color: var(--color-neutral-600)">비공개 영역</div>
+            <div style="margin-top: 8px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-500)">
+              <div>패스키로 인증한 사람만 열람</div>
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="about" data-screen-label="About" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 110px 28px">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; margin-bottom: 64px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700)">01 / About</div>
+        <div>
+          <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">모르는 내용을 그냥 지나치지 않습니다.</h2>
+          <p style="margin: 0; max-width: 620px; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">저는 모르는 내용을 그냥 지나치지 않고 직접 찾아 배우며, 부족한 부분을 꾸준히 보완하는 IT 개발자 지망생 하태형입니다.</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px">
+        <div style="display: flex; flex-direction: column; gap: 26px">
+          <div>
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">Name</div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 22px">하태형</div>
+          </div>
+          <div>
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">Strengths</div>
+            <div style="font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">
+              <div>01 — 부족한 부분을 도구로 보완</div>
+              <div>02 — 모르는 것을 끝까지 파고듦</div>
+              <div>03 — 분석하고 정리하며 체계적으로</div>
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">Now</div>
+            <div style="font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">
+              <div>Aleph 과정 수강 중</div>
+              <div>정보처리기사 실기 준비 중</div>
+              <div>SQLD · 리눅스마스터 2급 보유</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 22px; max-width: 720px">
+          <p style="margin: 0; font-size: 15px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">기계과를 전공한 뒤 기계직 공무원 시험을 준비했지만, 공부를 이어가면서 그 길이 제게 잘 맞는지 고민하게 되었습니다. 결국 익숙한 전공을 따라가기보다 예전부터 배워보고 싶었던 IT 개발에 도전하기로 했습니다. 국비 지원 교육을 시작한 뒤에는 같은 책상에 앉아 공부하더라도 이전과는 다른 태도로 학습하게 되었습니다. 수업 중 모르는 내용이 나오면 직접 검색하고 관련 내용까지 찾아보았으며, 배운 내용을 활용해 직접 결과물을 만들어보는 과정에서 흥미를 느꼈습니다.</p>
+          <p style="margin: 0; font-size: 15px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">저의 강점은 세 가지입니다. 첫째, 부족한 부분을 파악하고 필요한 도구를 찾아 보완합니다. 둘째, 모르는 내용을 회피하지 않고 질문하고 찾아보며 제 것으로 만들려고 합니다. 셋째, 해야 할 일을 분석하고 정리하면서 체계적으로 진행합니다. 실제로 수업과 과제를 수행하는 동시에 자격증 공부를 병행했고, 틈나는 시간에는 문제를 풀거나 배운 내용을 복습했습니다. 부족한 미감을 보완하기 위해 새로운 디자인 도구를 찾아 사용하고, 과제를 완성한 뒤에도 더 나은 결과를 위해 세부 내용을 다듬기도 했습니다.</p>
+          <p style="margin: 0; font-size: 15px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">아직 개발 분야의 기초를 다지는 단계이지만, 무엇을 모르는지 스스로 확인하고 필요한 내용을 찾아 채워가는 학습 방식을 만들어가고 있습니다. 앞으로도 수업과 자격증 공부를 통해 기본기를 쌓고, 보안과 AI를 비롯한 다양한 기술을 실제 결과물로 연결하고 싶습니다. 새로운 기술을 배울 때 모르는 내용을 직접 찾아보고 필요한 도구를 활용해 문제를 해결하는 개발자로 성장하겠습니다.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="story" data-screen-label="Story" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 110px 28px">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; margin-bottom: 64px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700)">02 / Story</div>
+        <div>
+          <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">넘어지지 않은 사람이 아니라, 다시 시작하는 사람입니다.</h2>
+          <p style="margin: 0; max-width: 620px; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">이 과정에 오기 전 가장 힘들었던 시기와, 그 시기를 지나 무엇이 달라졌는지를 직접 정리했습니다.</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px">
+        <div style="display: flex; flex-direction: column; gap: 22px">
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 17px; color: var(--color-accent-700)">2021.12</div>
+            <div style="margin-top: 6px; font-size: 13px; line-height: 1.8; color: var(--color-neutral-700); word-break: keep-all">서울 노량진 고시원<br />기계직 공무원 시험 준비 시작</div>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 17px; color: var(--color-accent-700)">2022 – 2023</div>
+            <div style="margin-top: 6px; font-size: 13px; line-height: 1.8; color: var(--color-neutral-700); word-break: keep-all">본가 / 독서실 · 도서관<br />1년 더 준비한 뒤 방향 전환</div>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 17px; color: var(--color-accent-700)">2026</div>
+            <div style="margin-top: 6px; font-size: 13px; line-height: 1.8; color: var(--color-neutral-700); word-break: keep-all">국비 지원 교육 · Aleph 과정<br />개발 학습과 자격증 준비 병행</div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 22px; max-width: 720px">
+          <p style="margin: 0; font-size: 15px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">2021년 말, 가족의 추천으로 공무원 준비를 시작했습니다. 기계과를 전공했기 때문에 기계직 공무원을 준비했고, 짧은 기간에 끝내고 싶다는 마음으로 서울 노량진의 고시원에 들어가 시험 공부를 시작했습니다. 처음 몇 달은 해볼 만하다고 느꼈습니다. 하지만 1년쯤 지나자 성적은 오르지 않았고, 고시원 생활로 점점 지쳐갔습니다. 특히 역학 과목은 내용이 너무 어려워 공부할수록 부담이 커졌습니다. 성적은 오르지 않고 생활과 공부 모두 힘들어지는 상황이 반복되면서, 가족과 상의해 본가로 내려가기로 했습니다. 본가에서도 1년 정도 주변 독서실과 도서관을 오가며 공부해봤지만, 합격 가능성이 낮다고 느껴 더 길어지기 전에 끝내기로 마음먹었습니다.</p>
+          <p style="margin: 0; font-size: 15px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">시험을 포기한 뒤 앞으로 어떤 일을 해야 할지 고민했습니다. 기계과를 전공했기 때문에 기계 관련 직종으로 취업하는 방법도 생각했지만, 마음이 잘 가지 않는 분야를 전공했다는 이유만으로 계속 이어가고 싶지는 않았습니다. 방향을 바꾸려면 지금이 적기라는 생각이 들었고, 예전부터 한 번 배워보고 싶었던 IT 개발에 도전하기로 했습니다.</p>
+          <p style="margin: 0; font-size: 15px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">개발을 배우기 위해 여러 방법을 찾아보다가 국비 지원 교육을 알게 되었고, 지원해 수업을 시작했습니다. 책상에 앉아 공부한다는 점은 예전과 같았지만, 억지로 외우기만 했던 과거와는 달랐습니다. 모르는 내용이 생기면 오히려 궁금해졌고, 배운 내용을 활용해 직접 무언가를 만들 수 있다는 점이 재미있었습니다. 제가 생각한 기능이 실제로 구현되는 과정도 매력적으로 느껴졌습니다.</p>
+          <p style="margin: 0; font-size: 15px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">아직 처음 접하는 분야라 기초가 부족했지만, 수업 중 모르는 내용이 나오면 직접 검색해 이해하려고 했습니다. 관련 내용까지 추가로 찾아보고, 틈나는 시간마다 자격증 공부도 병행했습니다. 공무원 시험을 준비할 때는 정해진 내용을 외우는 데 집중했다면, 지금은 모르는 것을 직접 찾아보고 배운 내용을 결과물로 확인하는 방식으로 공부하고 있습니다. 제가 흥미를 느끼고 주도적으로 배울 수 있는 방향을 찾았다는 점에서 이전과 달라졌습니다. 앞으로도 수업과 자격증 공부를 이어가며 기본기를 갖추고, 배운 내용을 실제 결과물로 만들어가고 싶습니다.</p>
+        </div>
+      </div>
+
+      <article class="blueprint" style="margin-top: 64px; padding: 28px 24px 32px">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 24px">다시 일어난 날</div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px">
+          <div style="border-top: 2px solid var(--color-text); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">2026.08.26</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">과제와 자격증 공부를 함께 하느라 그날 정한 강점 행동을 지키지 못했습니다. 기록에는 &ldquo;못 했다&rdquo;고 적고, 스스로에게 &ldquo;고생했고 집에서라도 마무리 해보자&rdquo;고 남겼습니다.</p>
+          </div>
+          <div style="border-top: 2px solid var(--color-accent); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 10px">2026.08.27</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">다음 날 다시 강점 행동을 실천했다고 기록했습니다. 예전에는 부진을 2년 가까이 끌고서야 방향을 바꿨지만, 지금은 안 되는 하루를 바로 다음 날 인정하고 조정합니다. 달라진 것은 결과가 아니라 알아채고 되돌아오는 속도입니다.</p>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section id="method" data-screen-label="Method" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 110px 28px">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; margin-bottom: 64px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700)">03 / How I learn</div>
+        <div>
+          <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">배우는 과정에서도 방법을 찾습니다.</h2>
+          <p style="margin: 0; max-width: 620px; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">지금까지의 학습 경험에서 반복해서 나타난 세 가지 방식을 하나의 흐름으로 정리했습니다.</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 28px">
+        <article class="blueprint" style="padding: 28px 24px 32px; display: flex; flex-direction: column; gap: 44px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">01 / Learn</div>
+          <div>
+            <h3 style="margin: 0 0 12px; font-size: 23px; word-break: keep-all">적극적으로 질문하고 보완합니다.</h3>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">새로운 분야를 배우면서 막히는 부분을 그냥 넘어가지 않습니다. 강사에게 질문하고 AI를 활용해 부족한 부분을 추가로 학습하며, 배운 내용을 실제 과제 수행으로 연결합니다.</p>
+          </div>
+        </article>
+
+        <article class="blueprint" style="padding: 28px 24px 32px; display: flex; flex-direction: column; gap: 44px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">02 / Verify</div>
+          <div>
+            <h3 style="margin: 0 0 12px; font-size: 23px; word-break: keep-all">제대로 이해했는지 확인합니다.</h3>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">모르는 내용이 나오면 검색하거나 AI에게 질문해 의미를 확인하고, 수업 흐름을 따라가기 위해 필요한 내용을 추가로 찾아봅니다.</p>
+          </div>
+        </article>
+
+        <article class="blueprint" style="padding: 28px 24px 32px; display: flex; flex-direction: column; gap: 44px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">03 / Improve</div>
+          <div>
+            <h3 style="margin: 0 0 12px; font-size: 23px; word-break: keep-all">문제의 원인을 기록합니다.</h3>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">오류를 해결하는 것에서 끝내지 않고 발생 원인을 분석하고 메모합니다. 이를 통해 비슷한 문제의 반복을 줄이고, 경험을 다른 사람에게 설명할 수 있는 지식으로 연결합니다.</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="experience" data-screen-label="Experience" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 110px 28px">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; margin-bottom: 64px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700)">04 / What I did</div>
+        <div>
+          <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">말보다 과정으로 보여드립니다.</h2>
+          <p style="margin: 0; max-width: 620px; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">실제 경험에서 무엇을 마주했고, 어떤 행동을 했으며, 그 결과 무엇이 달라졌는지를 중심으로 정리했습니다.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0">
+        <article style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; padding: 44px 0; border-top: 1px solid var(--color-divider)">
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: clamp(56px, 8vw, 108px); line-height: 0.85; color: var(--color-accent)">01</div>
+            <div style="margin-top: 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600)">Where</div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 17px">학원 / 네트워크 학습</div>
+          </div>
+          <div>
+            <h3 style="margin: 0 0 32px; font-size: clamp(22px, 2.6vw, 32px); word-break: keep-all">모르는 부분을 그냥 넘기지 않는 학습</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px">
+              <div style="border-top: 2px solid var(--color-text); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">When / Where</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">학원에서 네트워크 분야를 처음 접하며 새로운 개념과 내용을 학습했습니다.</p>
+              </div>
+              <div style="border-top: 2px solid var(--color-text); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">Action</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">수업을 따라가면서 막히는 부분이 생기면 강사님에게 질문하고, AI를 활용해 부족한 부분을 추가로 학습했습니다.</p>
+              </div>
+              <div style="border-top: 2px solid var(--color-accent); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 10px">Result</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">배운 내용을 이해하고 과제를 성공적으로 수행할 수 있었습니다.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; padding: 44px 0; border-top: 1px solid var(--color-divider)">
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: clamp(56px, 8vw, 108px); line-height: 0.85; color: var(--color-accent)">02</div>
+            <div style="margin-top: 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600)">Where</div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 17px">학원 / 새로운 내용 학습</div>
+          </div>
+          <div>
+            <h3 style="margin: 0 0 32px; font-size: clamp(22px, 2.6vw, 32px); word-break: keep-all">이해한 내용을 다른 관점에서 검증하기</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px">
+              <div style="border-top: 2px solid var(--color-text); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">When / Where</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">학원에서 새로운 내용을 학습하면서 개념을 이해하고 다음 단계로 넘어가야 했습니다.</p>
+              </div>
+              <div style="border-top: 2px solid var(--color-text); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">Action</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">배운 내용을 AI에게 비슷한 비유나 다른 방식으로 설명해 달라고 요청하고, 내가 제대로 이해하고 있는지 교차검증했습니다.</p>
+              </div>
+              <div style="border-top: 2px solid var(--color-accent); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 10px">Result</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">처음에는 애매하게 이해했던 내용도 개념 간의 흐름을 확실하게 잡고 다음 단계로 넘어갈 수 있었습니다.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; padding: 44px 0; border-top: 1px solid var(--color-divider); border-bottom: 1px solid var(--color-divider)">
+          <div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: clamp(56px, 8vw, 108px); line-height: 0.85; color: var(--color-accent)">03</div>
+            <div style="margin-top: 20px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600)">Where</div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 17px">프로그래밍 학습</div>
+          </div>
+          <div>
+            <h3 style="margin: 0 0 32px; font-size: clamp(22px, 2.6vw, 32px); word-break: keep-all">오류를 해결하는 것에서 원인을 기록하는 것으로</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px">
+              <div style="border-top: 2px solid var(--color-text); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">When / Where</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">프로그래밍을 공부하면서 오류가 발생하거나 학습이 막히는 상황을 경험했습니다.</p>
+              </div>
+              <div style="border-top: 2px solid var(--color-text); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">Action</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">단순히 오류를 해결하는 데서 끝내지 않고, 왜 해당 오류가 발생했는지 원인을 분석하고 그 내용을 메모해두었습니다.</p>
+              </div>
+              <div style="border-top: 2px solid var(--color-accent); padding-top: 14px">
+                <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 10px">Result</div>
+                <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">비슷한 오류가 다시 발생하는 비중이 크게 줄었고, 비슷한 문제를 겪는 주변 사람들에게 원인과 해결 방향을 조언할 수 있게 되었습니다.</p>
+              </div>
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="strengths" data-screen-label="Strengths" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 110px 28px">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; margin-bottom: 64px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700)">05 / Strengths</div>
+        <div>
+          <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">강점은 기록에서 찾았습니다.</h2>
+          <p style="margin: 0; max-width: 620px; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">22일 동안 남긴 하루 기록을 직접 읽고, 반복해서 나타난 강점 세 가지를 골랐습니다. 각 강점에는 날짜가 있는 장면과 동료가 말해 준 평가를 함께 두어 제 주장만으로 남지 않게 했습니다.</p>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px">
+        <article class="blueprint" style="padding: 28px 24px 32px; display: flex; flex-direction: column; gap: 22px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div>
+            <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 14px">01 / Strength</div>
+            <h3 style="margin: 0; font-size: 23px; line-height: 1.4; word-break: keep-all">AI를 도구로 삼아 부족한 부분을 보완합니다</h3>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">2026.09.03</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">부족한 미감을 보충하기 위해 새로운 디자인 툴을 스스로 찾아 여러 시안을 뽑아봤습니다.</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">동료가 말해 준 것</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">&ldquo;ai를 활용하여 과제를 빠르게 완료해나가는 부분이 좋았다&rdquo;</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">그때 지킨 가치</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">부족한 부분을 인정하고, 그것을 메울 도구를 직접 찾는 것</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-accent); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 10px">관련 작업</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">T06 PinPoint — 디자인 툴로 화면 시안을 보완</p>
+          </div>
+        </article>
+
+        <article class="blueprint" style="padding: 28px 24px 32px; display: flex; flex-direction: column; gap: 22px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div>
+            <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 14px">02 / Strength</div>
+            <h3 style="margin: 0; font-size: 23px; line-height: 1.4; word-break: keep-all">모르는 것을 끝까지 파고듭니다</h3>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">2026.09.10</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">수업 중 강사님이 언급한 전문 용어를 그 자리에서 AI에게 물어보며 수업 흐름을 놓치지 않고 따라갔습니다.</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">동료가 말해 준 것</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">&ldquo;배움에 있어 즉흥적으로 바로 추가 질문을 하며 개인적으로 확립해나가려는 시도&rdquo;</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">그때 지킨 가치</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">모르는 것을 마주했을 때 회피하지 않고 끝까지 파고드는 지적 호기심과 주도적인 학습</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-accent); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 10px">관련 작업</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">T08 Aleph Portfolio — 패스키 기능 개발 중 생긴 오류에 방향성을 제시하고 문제 지점을 짚음</p>
+          </div>
+        </article>
+
+        <article class="blueprint" style="padding: 28px 24px 32px; display: flex; flex-direction: column; gap: 22px">
+          <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+          <div>
+            <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 14px">03 / Strength</div>
+            <h3 style="margin: 0; font-size: 23px; line-height: 1.4; word-break: keep-all">분석하고 정리하며 체계적으로 진행합니다</h3>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">2026.08.21</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">과제를 다 끝내지 못한 날에도 기한에 지장이 없도록 도중에 정리해두었고, 그날 첫 과제를 마무리했습니다.</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">동료가 말해 준 것</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">&ldquo;늦은 시간까지 과제를 하며 끈기와 열정을 보여주셨다&rdquo;</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-divider); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600); margin-bottom: 10px">그때 지킨 가치</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">다음에 같은 일을 할 때 더 잘할 수 있도록 과정을 남겨두는 것</p>
+          </div>
+          <div style="border-top: 1px solid var(--color-accent); padding-top: 14px">
+            <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 10px">관련 작업</div>
+            <p style="margin: 0; font-size: 14px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">T01 Aleph Project — 첫 과제를 기한 안에 마무리</p>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section id="works" data-screen-label="Works" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 110px 28px">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; margin-bottom: 64px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700)">06 / Works</div>
+        <div>
+          <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">배운 방식을 결과물로 남겼습니다.</h2>
+          <p style="margin: 0; max-width: 620px; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">처음에는 AI에게 요구사항을 전달하는 것에서 시작했고, 이어서 기능을 확장하는 방법을 익혔습니다. 이후에는 디자인과 작업 방식을 직접 설계하는 단계로 넘어갔고, 마지막에는 그동안 익힌 방식을 처음 만든 포트폴리오에 다시 적용했습니다.</p>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom: 48px">
+          <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 10px">
+            <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">Stage 01</div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 19px">AI와 함께 만들기 시작한 시기</div>
+          </div>
+          <a href="https://alephproject-orpin.vercel.app/" target="_blank" rel="noreferrer" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T01</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">Aleph Project <span style="font-size: 13px; color: var(--color-neutral-600)">&#8599;</span></div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">나를 소개하는 한 페이지. 처음으로 바이브 코딩을 사용해 결과물을 만든 작업입니다.</div>
+            </div>
+          </a>
+          <a href="https://aleph-project-dodge.vercel.app/" target="_blank" rel="noreferrer" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T02</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">Dodge <span style="font-size: 13px; color: var(--color-neutral-600)">&#8599;</span></div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">직접 설계한 미니게임. AI 활용법의 기초를 배우며 만든 작업입니다.</div>
+            </div>
+          </a>
+          <a href="https://aleph-meme-studio.vercel.app/" target="_blank" rel="noreferrer" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T03</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">Meme Studio <span style="font-size: 13px; color: var(--color-neutral-600)">&#8599;</span></div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">짤 · 카드 스튜디오. 여러 요구사항을 전달하며 기능을 추가해나간 작업입니다.</div>
+            </div>
+          </a>
+        </div>
+
+        <div style="margin-bottom: 48px">
+          <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 10px">
+            <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">Stage 02</div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 19px">작업 방법과 설계를 확장한 시기</div>
+          </div>
+          <a href="https://aleph-the-day-before.vercel.app/" target="_blank" rel="noreferrer" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T04</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">The Day Before <span style="font-size: 13px; color: var(--color-neutral-600)">&#8599;</span></div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">GitHub 연계, 화면 효과, 기초 디자인을 적용한 작업입니다.</div>
+            </div>
+          </a>
+          <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T05</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">Meme Studio 기능 확장 실험</div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">T03의 결과물에 다른 AI를 사용해 기능을 추가하며, AI 사이에서 자료를 보존하고 요구사항을 전달하는 방법을 연습한 작업입니다. 배포 프로젝트는 아닙니다.</div>
+            </div>
+          </div>
+          <a href="https://aleph-plan-do-see-fawn.vercel.app/" target="_blank" rel="noreferrer" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T06</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">PinPoint <span style="font-size: 13px; color: var(--color-neutral-600)">&#8599;</span></div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">AI에게 요청해 만든 세로형 초기 디자인을 바탕으로, 화면 배치와 내용을 실제로 사용할 수 있도록 다듬은 첫 버전입니다.</div>
+            </div>
+          </a>
+          <a href="https://aleph-pinpoint.vercel.app/" target="_blank" rel="noreferrer" style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T07</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">PinPoint (재설계) <span style="font-size: 13px; color: var(--color-neutral-600)">&#8599;</span></div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">전체 배치를 다시 설계한 발전 버전입니다. 코르크 · 픽셀 두 방향으로 정리했고, 픽셀 테마는 부분 수정 대신 디자인의 기초부터 다시 설계했습니다. 직접 목업과 가이드를 만들고 작업 원칙 · 구조 · 검증 기준을 문서로 정리했습니다.</div>
+            </div>
+          </a>
+        </div>
+
+        <div style="margin-bottom: 48px">
+          <div style="display: flex; align-items: baseline; gap: 16px; margin-bottom: 10px">
+            <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700)">Stage 03</div>
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 19px">배운 방식을 다시 적용한 시기</div>
+          </div>
+          <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T08</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">Aleph Portfolio — 지금 보고 있는 페이지</div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">T01의 포트폴리오를 바탕으로, 앞선 과제에서 익힌 AI 활용법과 작업 방식을 다시 적용했습니다. 내용은 유지하면서 디자인을 크게 수정하고 패스키 기능을 추가했습니다.</div>
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 24px; padding: 22px 0; border-top: 1px solid var(--color-divider)">
+            <div style="font-family: var(--font-heading); font-weight: 600; font-size: 26px; line-height: 1; color: var(--color-accent)">T09</div>
+            <div>
+              <div style="font-family: var(--font-heading); font-weight: 600; font-size: 20px; letter-spacing: 0.02em">나를 말하는 에이전트</div>
+              <div style="margin-top: 6px; font-size: 13px; line-height: 1.9; color: var(--color-neutral-700); word-break: keep-all">하루 기록을 바탕으로 강점과 학습 과정을 정리하는 현재 작업입니다.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 8px; padding-top: 22px; border-top: 1px dashed var(--color-neutral-400)">
+        <div style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-500); margin-bottom: 10px">추후 추가할 자리</div>
+        <div style="font-size: 14px; line-height: 1.9; color: var(--color-neutral-500)">T10 논문 · T11 소설 · 마지막 과제 대표작</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="evidence" data-screen-label="Evidence" style="padding: 110px 28px; background: var(--color-accent-900); color: var(--color-bg)">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; margin-bottom: 56px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-300)">07 / Learning record</div>
+        <div>
+          <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; color: var(--color-bg); word-break: keep-all">기록과 시험으로 확인합니다.</h2>
+          <p style="margin: 0; max-width: 620px; font-size: 15px; line-height: 1.85; color: var(--color-accent-200); word-break: keep-all">수업과 과제를 진행하는 동안 자격증 준비를 함께 이어갔고, 그날 한 일을 매일 기록으로 남겼습니다.</p>
+        </div>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0">
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; padding: 26px 0; border-top: 1px solid color-mix(in srgb, var(--color-bg) 22%, transparent)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 19px; letter-spacing: 0.02em">자격증</div>
+          <div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all">SQLD</span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">보유</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all">리눅스마스터 2급</span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">보유</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all">정보처리기사</span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">필기 합격 · 실기 준비 중</span>
+          </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; padding: 26px 0; border-top: 1px solid color-mix(in srgb, var(--color-bg) 22%, transparent)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 19px; letter-spacing: 0.02em">과정 · 학력</div>
+          <div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all">Aleph 과정</span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">수강 중 · T01 – T09</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all">코리아 IT 학원 정처산기 과정</span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">6개월 수료</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all">영남대 기계공학부</span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">졸업</span>
+          </div>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; padding: 26px 0; border-top: 1px solid color-mix(in srgb, var(--color-bg) 22%, transparent); border-bottom: 1px solid color-mix(in srgb, var(--color-bg) 22%, transparent)">
+          <div style="font-family: var(--font-heading); font-weight: 600; font-size: 19px; letter-spacing: 0.02em">기록</div>
+          <div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all">하루 기록</span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">2026.08.11 – 09.10 · 22일</span>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 6px 24px; padding: 7px 0">
+            <span style="font-size: 15px; line-height: 1.6; word-break: keep-all"><a href="https://github.com/HTH-0" target="_blank" rel="noreferrer" class="evidence-link" style="color: var(--color-bg); border-bottom: 1px solid color-mix(in srgb, var(--color-bg) 45%, transparent); padding-bottom: 2px">HTH-0 GitHub 저장소 &#8599;</a></span>
+            <span style="font-size: 13px; line-height: 1.6; color: var(--color-accent-200); word-break: keep-all">학습 정리</span>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="contact" data-screen-label="Contact" style="min-height: 100svh; display: flex; flex-direction: column; justify-content: center; padding: 110px 28px">
+    <div style="max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2.2fr); gap: 48px; align-items: end">
+      <div>
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 20px">08 / Contact</div>
+        <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">더 궁금한 점이 있다면 연락해주세요.</h2>
+        <p style="margin: 0; max-width: 480px; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">학습 과정이나 경험에 대해 더 이야기하고 싶다면 아래 연락처를 통해 연결할 수 있습니다.</p>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 0">
+        <a href="https://github.com/HTH-0" target="_blank" rel="noreferrer" style="display: flex; justify-content: space-between; align-items: baseline; gap: 20px; padding: 22px 0; border-top: 1px solid var(--color-divider); border-bottom: 1px solid var(--color-divider)">
+          <span style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600)">GitHub</span>
+          <span style="font-family: var(--font-heading); font-weight: 600; font-size: clamp(20px, 2.4vw, 30px)">github.com/HTH-0 ↗</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section id="private" data-screen-label="Private" style="padding: 110px 28px; border-top: 1px solid var(--color-divider)">
+    <div style="max-width: 1240px; margin: 0 auto">
+      <div style="max-width: 620px; margin: 0 auto 32px">
+        <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 16px">SECRET</div>
+        <h2 style="margin: 0 0 16px; font-size: clamp(30px, 4vw, 46px); letter-spacing: -0.01em; word-break: keep-all">여기부터는 잠겨 있습니다.</h2>
+        <p style="margin: 0; font-size: 15px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">패스키가 열쇠입니다.</p>
+      </div>
+
+      <div id="private-locked" class="blueprint" style="max-width: 620px; margin: 0 auto; padding: 36px 32px 40px">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-accent-700); margin-bottom: 14px">Locked</div>
+        <p style="margin: 0 0 28px; font-size: 14px; line-height: 1.85; color: var(--color-neutral-700); word-break: keep-all">잠겨 있습니다. 패스키로 인증해야 아래 내용을 볼 수 있습니다.</p>
+
+        <form id="login-form" autocomplete="off" style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 14px">
+          <div class="field">
+            <label for="login-username">계정</label>
+            <input type="text" id="login-username" name="username" class="input" placeholder="여기를 클릭하면 저장된 패스키가 표시됩니다" autocomplete="username webauthn" />
+          </div>
+          <button type="button" id="login-button" class="btn btn-primary" style="align-self: flex-end">패스키로 로그인</button>
+        </form>
+
+        <button type="button" id="show-register-button" class="btn btn-secondary">새 패스키 등록</button>
+
+        <form id="register-form" hidden style="margin-top: 18px">
+          <div class="field">
+            <label for="register-username">계정 이름</label>
+            <input type="text" id="register-username" class="input" placeholder="예: test-account-1" required />
+          </div>
+          <div class="field">
+            <label for="register-nickname">이 패스키 이름</label>
+            <input type="text" id="register-nickname" class="input" placeholder="예: MacBook Touch ID" required />
+          </div>
+          <div style="display: flex; gap: 10px">
+            <button type="submit" id="register-button" class="btn btn-primary">패스키 등록</button>
+            <button type="button" id="cancel-register-button" class="btn btn-secondary">취소</button>
+          </div>
+        </form>
+
+        <p id="auth-message" role="status" style="min-height: 20px; margin: 14px 0 0; font-size: 13px; color: var(--color-neutral-700)"></p>
+      </div>
+
+      <div id="private-unlocked" class="blueprint" hidden style="max-width: 620px; margin: 0 auto; padding: 36px 32px 40px">
+        <i class="corner tl"></i><i class="corner tr"></i><i class="corner bl"></i><i class="corner br"></i>
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; padding-bottom: 18px; margin-bottom: 26px; border-bottom: 1px solid var(--color-divider); font-size: 14px">
+          <span>로그인됨: <strong id="current-username"></strong></span>
+          <button type="button" id="logout-button" class="btn btn-secondary">로그아웃</button>
+        </div>
+
+        <div id="private-items" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px"></div>
+
+        <div>
+          <h3 style="margin: 0 0 12px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-neutral-700)">등록된 패스키</h3>
+          <ul id="passkey-list" style="list-style: none; margin: 0 0 16px; padding: 0; display: flex; flex-direction: column; gap: 8px"></ul>
+          <button type="button" id="add-passkey-button" class="btn btn-secondary">이 기기에 새 패스키 추가</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer style="padding: 28px; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-neutral-600)">
+    <span>© 2026 하태형</span>
+    <span>Learn · Verify · Improve</span>
+  </footer>
+</div>
+</body>
+</html>
