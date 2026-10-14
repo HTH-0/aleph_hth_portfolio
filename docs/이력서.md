@@ -7,7 +7,7 @@
 | 이름 | 하태형 |
 | 이메일 | xogud17931@gmail.com |
 | GitHub | https://github.com/HTH-0 |
-| 포트폴리오 | https://aleph-hth-portfolio.vercel.app |
+| 포트폴리오 | https://alephhthportfolio.vercel.app |
 | 희망 분야 | 보안 · 인프라 · 백엔드 |
 
 ## 학력
