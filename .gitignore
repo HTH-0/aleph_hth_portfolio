@@ -12,3 +12,6 @@ dist/
 
 # Overwrite CTF 원본 자료 (플래그·VM 이미지 포함, 제출하지 않음)
 /overwrite/
+
+# PinPoint(T06, T07) 원본 사본 (내부에 별도 저장소가 있어 제출하지 않음)
+/aleph_pinpoint/
